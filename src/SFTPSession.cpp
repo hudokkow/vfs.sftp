@@ -30,8 +30,6 @@ extern ADDON::CHelper_libXBMC_addon* XBMC;
 
 #define SFTP_TIMEOUT 5
 
-namespace Yo {
-
 static std::string CorrectPath(const std::string& path)
 {
   if (path == "~")
@@ -80,11 +78,11 @@ static const char * SFTPErrorText(int sftp_error)
   return "Unknown error code";
 }
 
-CSFTPSession::CSFTPSession(const std::string& host, unsigned int port, const std::string& username, const std::string& password)
+CSFTPSession::CSFTPSession(VFSURL* url)
 {
-  XBMC->Log(ADDON::LOG_INFO, "SFTPSession: Creating new session on host '%s:%d' with user '%s'", host.c_str(), port, username.c_str());
+  XBMC->Log(ADDON::LOG_INFO, "SFTPSession: Creating new session on host '%s:%d' with user '%s'", url->hostname, url->port, url->username);
   PLATFORM::CLockObject lock(m_lock);
-  if (!Connect(host, port, username, password))
+  if (!Connect(url))
     Disconnect();
 
   m_LastActive = PLATFORM::GetTimeMs();
@@ -183,6 +181,7 @@ bool CSFTPSession::GetDirectory(const std::string& base, const std::string& fold
 
           VFSDirEntry entry;
           entry.label = strdup(itemName.c_str());
+          entry.title = NULL;
 
           if (itemName[0] == '.')
           {
@@ -348,7 +347,7 @@ bool CSFTPSession::VerifyKnownHost(ssh_session session)
   return false;
 }
 
-bool CSFTPSession::Connect(const std::string& host, unsigned int port, const std::string& username, const std::string& password)
+bool CSFTPSession::Connect(VFSURL* url)
 {
   int timeout     = SFTP_TIMEOUT;
   m_connected     = false;
@@ -358,26 +357,26 @@ bool CSFTPSession::Connect(const std::string& host, unsigned int port, const std
   m_session=ssh_new();
   if (m_session == NULL)
   {
-    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to initialize session for host '%s'", host.c_str());
+    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to initialize session for host '%s'", url->hostname);
     return false;
   }
 
 #if LIBSSH_VERSION_INT >= SSH_VERSION_INT(0,4,0)
-  if (ssh_options_set(m_session, SSH_OPTIONS_USER, username.c_str()) < 0)
+  if (ssh_options_set(m_session, SSH_OPTIONS_USER, url->username) < 0)
   {
-    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to set username '%s' for session", username.c_str());
+    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to set username '%s' for session", url->username);
     return false;
   }
 
-  if (ssh_options_set(m_session, SSH_OPTIONS_HOST, host.c_str()) < 0)
+  if (ssh_options_set(m_session, SSH_OPTIONS_HOST, url->hostname) < 0)
   {
-    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to set host '%s' for session", host.c_str());
+    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to set host '%s' for session", url->hostname);
     return false;
   }
 
-  if (ssh_options_set(m_session, SSH_OPTIONS_PORT, &port) < 0)
+  if (ssh_options_set(m_session, SSH_OPTIONS_PORT, &url->port) < 0)
   {
-    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to set port '%d' for session", port);
+    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to set port '%d' for session", url->port);
     return false;
   }
 
@@ -386,21 +385,21 @@ bool CSFTPSession::Connect(const std::string& host, unsigned int port, const std
 #else
   SSH_OPTIONS* options = ssh_options_new();
 
-  if (ssh_options_set_username(options, username.c_str()) < 0)
+  if (ssh_options_set_username(options, url->username) < 0)
   {
-    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to set username '%s' for session", username.c_str());
+    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to set username '%s' for session", url->username);
     return false;
   }
 
-  if (ssh_options_set_host(options, host.c_str()) < 0)
+  if (ssh_options_set_host(options, url->hostname) < 0)
   {
-    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to set host '%s' for session", host.c_str());
+    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to set host '%s' for session", url->hostname);
     return false;
   }
 
-  if (ssh_options_set_port(options, port) < 0)
+  if (ssh_options_set_port(options, url->port) < 0)
   {
-    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to set port '%d' for session", port);
+    XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to set port '%d' for session", url->port);
     return false;
   }
   
@@ -445,13 +444,13 @@ bool CSFTPSession::Connect(const std::string& host, unsigned int port, const std
   if (method & SSH_AUTH_METHOD_PASSWORD)
   {
     if (publicKeyAuth != SSH_AUTH_SUCCESS &&
-        (passwordAuth = ssh_userauth_password(m_session, username.c_str(), password.c_str())) == SSH_AUTH_ERROR)
+        (passwordAuth = ssh_userauth_password(m_session, url->username, url->password)) == SSH_AUTH_ERROR)
       {
         XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Failed to authenticate via password '%s'", ssh_get_error(m_session));
         return false;
       }
   }
-  else if (!password.empty())
+  else if (strlen(url->password) > 0)
   {
     XBMC->Log(ADDON::LOG_ERROR, "SFTPSession: Password present, but server does not support password authentication");
   }
@@ -528,22 +527,20 @@ CSFTPSessionManager& CSFTPSessionManager::Get()
   return instance;
 }
 
-CSFTPSessionPtr CSFTPSessionManager::CreateSession(const std::string& host,
-                                                   unsigned int port,
-                                                   const std::string& username,
-                                                   const std::string& password)
+CSFTPSessionPtr CSFTPSessionManager::CreateSession(VFSURL* url)
 {
   // Convert port number to string
   std::stringstream itoa;
-  itoa << port;
+  itoa << url->port;
   std::string portstr = itoa.str();
 
   PLATFORM::CLockObject lock(m_lock);
-  std::string key = username + ":" + password + "@" + host + ":" + portstr;
+  std::string key = std::string(url->username) + ":" + 
+                    url->password + "@" + url->hostname + ":" + portstr;
   CSFTPSessionPtr ptr = sessions[key];
   if (ptr == NULL)
   {
-    ptr = CSFTPSessionPtr(new CSFTPSession(host, port, username, password));
+    ptr = CSFTPSessionPtr(new CSFTPSession(url));
     sessions[key] = ptr;
   }
 
@@ -566,5 +563,4 @@ void CSFTPSessionManager::DisconnectAllSessions()
 {
   PLATFORM::CLockObject lock(m_lock);
   sessions.clear();
-}
 }

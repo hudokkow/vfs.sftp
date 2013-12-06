@@ -126,18 +126,15 @@ struct SFTPContext
   std::string file;
 };
 
-void* Open(const char* url, const char* hostname,
-           const char* filename, unsigned int port,
-           const char* options, const char* username,
-           const char* password)
+void* Open(VFSURL* url)
 {
   SFTPContext* result = new SFTPContext;
 
-  result->session = Yo::CSFTPSessionManager::Get().CreateSession(hostname, port, username, password);
+  result->session = CSFTPSessionManager::Get().CreateSession(url);
 
   if (result->session)
   {
-    result->file = filename;
+    result->file = url->filename;
     result->sftp_handle = result->session->CreateFileHande(result->file);
     if (result->sftp_handle)
       return result;
@@ -185,7 +182,6 @@ int64_t GetLength(void* context)
     return buffer.st_size;
 }
 
-//*********************************************************************************************
 int64_t GetPosition(void* context)
 {
   SFTPContext* ctx = (SFTPContext*)context;
@@ -222,15 +218,9 @@ int64_t Seek(void* context, int64_t iFilePosition, int iWhence)
   }
 }
 
-bool Exists(const char* url, const char* hostname,
-            const char* filename, unsigned int port,
-            const char* options, const char* username,
-            const char* password)
+bool Exists(VFSURL* url)
 {
-  Yo::CSFTPSessionPtr session = Yo::CSFTPSessionManager::Get().CreateSession(hostname,
-                                                                     port,
-                                                                     username,
-                                                                     password);
+  CSFTPSessionPtr session = CSFTPSessionManager::Get().CreateSession(url);
   if (session)
     return session->FileExists(filename);
   else
@@ -240,15 +230,9 @@ bool Exists(const char* url, const char* hostname,
   }
 }
 
-int Stat(const char* url, const char* hostname,
-         const char* filename, unsigned int port,
-         const char* options, const char* username,
-         const char* password, struct __stat64* buffer)
+int Stat(VFSURL* url, struct __stat64* buffer)
 {
-  Yo::CSFTPSessionPtr session = Yo::CSFTPSessionManager::Get().CreateSession(hostname,
-                                                                     port,
-                                                                     username,
-                                                                     password);
+  CSFTPSessionPtr session = CSFTPSessionManager::Get().CreateSession(url);
   if (session)
     return session->Stat(filename, buffer);
   else
@@ -276,17 +260,11 @@ void DisconnectAll()
   Yo::CSFTPSessionManager::Get().DisconnectAllSessions();
 }
 
-bool DirectoryExists(const char* url, const char* hostname,
-                     const char* filename, unsigned int port,
-                     const char* options, const char* username,
-                     const char* password)
+bool DirectoryExists(VFSURL* url)
 {
-  Yo::CSFTPSessionPtr session = Yo::CSFTPSessionManager::Get().CreateSession(hostname,
-                                                                     port,
-                                                                     username,
-                                                                     password);
+  CSFTPSessionPtr session = CSFTPSessionManager::Get().CreateSession(url);
   if (session)
-    return session->DirectoryExists(filename);
+    return session->DirectoryExists(url->filename);
   else
   {
     XBMC->Log(ADDON::LOG_ERROR, "SFTPFile: Failed to create session to check exists");
@@ -294,20 +272,13 @@ bool DirectoryExists(const char* url, const char* hostname,
   }
 }
 
-void* GetDirectory(const char* url, const char* hostname,
-                   const char* filename, unsigned int port,
-                   const char* options, const char* username,
-                   const char* password, VFSDirEntry** items,
-                   int* num_items)
+void* GetDirectory(VFSURL* url, VFSDirEntry** items, int* num_items)
 {
   std::vector<VFSDirEntry>* result = new std::vector<VFSDirEntry>;
-  Yo::CSFTPSessionPtr session = Yo::CSFTPSessionManager::Get().CreateSession(hostname,
-                                                                             port,
-                                                                             username,
-                                                                             password);
+  CSFTPSessionPtr session = CSFTPSessionManager::Get().CreateSession(url);
   std::stringstream str;
-  str << "sftp://" << username << ":" << password << "@" << hostname << ":" << port << "/";
-  if (!session->GetDirectory(str.str(), filename, *result))
+  str << "sftp://" << url->username << ":" << url->password << "@" << url->hostname << ":" << url->port << "/";
+  if (!session->GetDirectory(str.str(), url->filename, *result))
   {
     delete result;
     return NULL;
@@ -337,30 +308,17 @@ void FreeDirectory(void* items)
   delete &ctx;
 }
 
-void* OpenForWrite(const char* url, const char* hostname,
-                   const char* filename2, unsigned int port,
-                   const char* options, const char* username,
-                   const char* password, bool bOverWrite)
+void* OpenForWrite(VFSURL* url, bool bOverWrite)
 {
   return NULL;
 }
 
-bool Rename(const char* url, const char* hostname,
-            const char* filename, unsigned int port,
-            const char* options, const char* username,
-            const char* password,
-            const char* url2, const char* hostname2,
-            const char* filename2, unsigned int port2,
-            const char* options2, const char* username2,
-            const char* password2)
+bool Rename(VFSURL* url, VFSURL* url2)
 {
   return false;
 }
 
-bool Delete(const char* url, const char* hostname,
-            const char* filename2, unsigned int port,
-            const char* options, const char* username,
-            const char* password)
+bool Delete(VFSURL* url)
 {
   return false;
 }
@@ -375,27 +333,17 @@ int Truncate(void* context, int64_t size)
   return -1;
 }
 
-bool RemoveDirectory(const char* url, const char* hostname,
-                     const char* filename, unsigned int port,
-                     const char* options, const char* username,
-                     const char* password)
+bool RemoveDirectory(VFSURL* url)
 {
   return false;
 }
 
-bool CreateDirectory(const char* url, const char* hostname,
-                     const char* filename, unsigned int port,
-                     const char* options, const char* username,
-                     const char* password)
+bool CreateDirectory(VFSURL* url)
 {
   return false;
 }
 
-void* ContainsFiles(const char* url, const char* hostname,
-                    const char* filename2, unsigned int port,
-                    const char* options, const char* username,
-                    const char* password,
-                    VFSDirEntry** items, int* num_items)
+void* ContainsFiles(VFSURL* url, VFSDirEntry** items, int* num_items)
 {
   return NULL;
 }
@@ -428,6 +376,11 @@ bool SelectChannel(void* context, unsigned int uiChannel)
 bool UpdateItem(void* context)
 {
   return false;
+}
+
+int GetChunkSize(void* context)
+{
+  return 1;
 }
 
 }

@@ -28,12 +28,10 @@
 #include <string>
 #include <vector>
 
-namespace Yo{
 class CSFTPSession
 {
 public:
-  CSFTPSession(const std::string& host, unsigned int port,
-               const std::string& username, const std::string& password);
+  CSFTPSession(VFSURL* url);
   virtual ~CSFTPSession();
 
   sftp_file CreateFileHande(const std::string& file);
@@ -48,8 +46,7 @@ public:
   bool IsIdle();
 private:
   bool VerifyKnownHost(ssh_session session);
-  bool Connect(const std::string& host, unsigned int port,
-               const std::string& username, const std::string& password);
+  bool Connect(VFSURL* url);
   void Disconnect();
   bool GetItemPermissions(const char *path, uint32_t &permissions);
   PLATFORM::CMutex m_lock;
@@ -66,10 +63,7 @@ class CSFTPSessionManager
 {
 public:
   static CSFTPSessionManager& Get();
-  CSFTPSessionPtr CreateSession(const std::string& host,
-                                unsigned int port,
-                                const std::string& username,
-                                const std::string& password);
+  CSFTPSessionPtr CreateSession(VFSURL* url);
   void ClearOutIdleSessions();
   void DisconnectAllSessions();
 private:
@@ -78,5 +72,3 @@ private:
   PLATFORM::CMutex m_lock;
   std::map<std::string, CSFTPSessionPtr> sessions;
 };
-
-}
