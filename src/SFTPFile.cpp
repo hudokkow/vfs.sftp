@@ -121,7 +121,7 @@ void ADDON_Announce(const char *flag, const char *sender, const char *message, c
 
 struct SFTPContext
 {
-  Yo::CSFTPSessionPtr session;
+  CSFTPSessionPtr session;
   sftp_file sftp_handle;
   std::string file;
 };
@@ -252,12 +252,12 @@ int IoControl(void* context, XFILE::EIoControl request, void* param)
 
 void ClearOutIdle()
 {
-  Yo::CSFTPSessionManager::Get().ClearOutIdleSessions();
+  CSFTPSessionManager::Get().ClearOutIdleSessions();
 }
 
 void DisconnectAll()
 {
-  Yo::CSFTPSessionManager::Get().DisconnectAllSessions();
+  CSFTPSessionManager::Get().DisconnectAllSessions();
 }
 
 bool DirectoryExists(VFSURL* url)
