@@ -222,10 +222,10 @@ bool Exists(VFSURL* url)
 {
   CSFTPSessionPtr session = CSFTPSessionManager::Get().CreateSession(url);
   if (session)
-    return session->FileExists(filename);
+    return session->FileExists(url->filename);
   else
   {
-    XBMC->Log(ADDON::LOG_ERROR, "SFTPFile: Failed to create session to check exists for '%s'", filename);
+    XBMC->Log(ADDON::LOG_ERROR, "SFTPFile: Failed to create session to check exists for '%s'", url->filename);
     return false;
   }
 }
@@ -234,7 +234,7 @@ int Stat(VFSURL* url, struct __stat64* buffer)
 {
   CSFTPSessionPtr session = CSFTPSessionManager::Get().CreateSession(url);
   if (session)
-    return session->Stat(filename, buffer);
+    return session->Stat(url->filename, buffer);
   else
   {
     XBMC->Log(ADDON::LOG_ERROR, "SFTPFile: Failed to create session to stat for '%s'", filename);
