@@ -237,7 +237,7 @@ int Stat(VFSURL* url, struct __stat64* buffer)
     return session->Stat(url->filename, buffer);
   else
   {
-    XBMC->Log(ADDON::LOG_ERROR, "SFTPFile: Failed to create session to stat for '%s'", filename);
+    XBMC->Log(ADDON::LOG_ERROR, "SFTPFile: Failed to create session to stat for '%s'", url->filename);
     return -1;
   }
 }
