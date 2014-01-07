@@ -272,7 +272,8 @@ bool DirectoryExists(VFSURL* url)
   }
 }
 
-void* GetDirectory(VFSURL* url, VFSDirEntry** items, int* num_items)
+void* GetDirectory(VFSURL* url, VFSDirEntry** items,
+                   int* num_items, VFSCallbacks* callbacks)
 {
   std::vector<VFSDirEntry>* result = new std::vector<VFSDirEntry>;
   CSFTPSessionPtr session = CSFTPSessionManager::Get().CreateSession(url);
