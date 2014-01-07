@@ -198,7 +198,7 @@ bool CSFTPSession::GetDirectory(const std::string& base, const std::string& fold
 
           if (attributes->flags & SSH_FILEXFER_ATTR_ACMODTIME)
           {
-            entry.mtime.dwLowDateTime = attributes->mtime & ((1 << 32)-1);
+            entry.mtime.dwLowDateTime = attributes->mtime & ((1LL << 32)-1);
             entry.mtime.dwHighDateTime = attributes->mtime >> 32;
           }
 
