@@ -344,7 +344,7 @@ bool CreateDirectory(VFSURL* url)
   return false;
 }
 
-void* ContainsFiles(VFSURL* url, VFSDirEntry** items, int* num_items)
+void* ContainsFiles(VFSURL* url, VFSDirEntry** items, int* num_items, char* rootpath)
 {
   return NULL;
 }
