@@ -146,7 +146,7 @@ void* Open(VFSURL* url)
   return NULL;
 }
 
-unsigned int Read(void* context, void* lpBuf, int64_t uiBufSize)
+ssize_t Read(void* context, void* lpBuf, size_t uiBufSize)
 {
   SFTPContext* ctx = (SFTPContext*)context;
   if (ctx && ctx->session && ctx->sftp_handle)
@@ -161,7 +161,7 @@ unsigned int Read(void* context, void* lpBuf, int64_t uiBufSize)
   else
     XBMC->Log(ADDON::LOG_ERROR, "SFTPFile: Can't read without a filehandle");
 
-  return 0;
+  return -1;
 }
 
 bool Close(void* context)
@@ -324,7 +324,7 @@ bool Delete(VFSURL* url)
   return false;
 }
 
-int Write(void* context, const void* lpBuf, int64_t uiBufSize)
+ssize_t Write(void* context, const void* lpBuf, size_t uiBufSize)
 {
   return -1;
 }
