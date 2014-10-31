@@ -19,12 +19,12 @@
  */
 
 #include "SFTPSession.h"
-#include "xbmc/util/timeutils.h"
+#include "kodi/util/timeutils.h"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sstream>
-#include "xbmc/libXBMC_addon.h"
+#include "kodi/libXBMC_addon.h"
 
 extern ADDON::CHelper_libXBMC_addon* XBMC;
 

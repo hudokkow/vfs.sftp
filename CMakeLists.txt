@@ -7,18 +7,18 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 enable_language(CXX)
 
 find_package(Boost REQUIRED)
-find_package(xbmc REQUIRED)
-find_package(xbmcplatform REQUIRED)
+find_package(kodi REQUIRED)
+find_package(kodiplatform REQUIRED)
 find_package(SSH REQUIRED)
 
-include_directories(${XBMC_INCLUDE_DIR}
-                    ${XBMCPLATFORM_INCLUDE_DIRS}
+include_directories(${KODI_INCLUDE_DIR}
+                    ${KODIPLATFORM_INCLUDE_DIRS}
                     ${SSH_INCLUDE_DIRS})
 
 set(SFTP_SOURCES src/SFTPSession.cpp
                  src/SFTPFile.cpp)
 
-set(DEPLIBS ${XBMCPLATFORM_LIBRARIES}
+set(DEPLIBS ${KODIPLATFORM_LIBRARIES}
             ${SSH_LIBRARIES})
 
 add_definitions( -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64)

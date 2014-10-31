@@ -18,12 +18,12 @@
  *
  */
 
-#include <xbmc/threads/mutex.h>
+#include <kodi/threads/mutex.h>
 #include <libssh/libssh.h>
 #include <libssh/sftp.h>
 #include <boost/shared_ptr.hpp>
-#include <xbmc/xbmc_addon_dll.h>
-#include <xbmc/xbmc_vfs_types.h>
+#include <kodi/xbmc_addon_dll.h>
+#include <kodi/kodi_vfs_types.h>
 #include <map>
 #include <string>
 #include <vector>
