@@ -18,7 +18,7 @@
  *
  */
 
-#include <kodi/threads/mutex.h>
+#include <platform/threads/mutex.h>
 #include <libssh/libssh.h>
 #include <libssh/sftp.h>
 #include <boost/shared_ptr.hpp>

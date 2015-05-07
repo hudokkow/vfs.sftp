@@ -19,7 +19,7 @@
  */
 
 #include "SFTPSession.h"
-#include "kodi/util/timeutils.h"
+#include "platform/util/timeutils.h"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>

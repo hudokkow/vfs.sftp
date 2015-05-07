@@ -19,7 +19,7 @@
  */
 
 #include "kodi/libXBMC_addon.h"
-#include "kodi/threads/mutex.h"
+#include "platform/threads/mutex.h"
 #include "SFTPSession.h"
 
 #include <map>
