@@ -24,7 +24,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sstream>
-#include "kodi/libXBMC_addon.h"
+#include "libXBMC_addon.h"
 
 extern ADDON::CHelper_libXBMC_addon* XBMC;
 
